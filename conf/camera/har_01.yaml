@@ -1,2 +1,3 @@
 id: "har_01"
 intrinsics_file: "data/calib/har_01/color_intrinsics.csv"
+required_tags: [0, 1]
