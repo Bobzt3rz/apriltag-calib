@@ -1,0 +1,16 @@
+# conf/config.yaml
+defaults:
+  - _self_
+  - scene: bedroom
+  - camera: har_01
+
+session_id: "2026_02_09_17_03_39_SB-40808C-2"
+
+# Only process frames containing these tags
+required_tags: [0, 1]
+
+# Hydra settings
+hydra:
+  run:
+    # Keeps your output logs organized by date
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
