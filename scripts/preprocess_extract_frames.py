@@ -3,8 +3,6 @@ import sys
 from pathlib import Path
 import shutil
 
-# Define the root of your project
-# (Assuming this script is in <project>/scripts/)
 BASE_DIR = Path(__file__).resolve().parent.parent
 RAW_DIR = BASE_DIR / "data" / "raw"
 PROCESSED_DIR = BASE_DIR / "data" / "processed"
@@ -26,8 +24,6 @@ def process_session(session_path):
     # 2. Prepare output directory
     output_dir = PROCESSED_DIR / session_id / "frames"
     if output_dir.exists():
-        # Optional: Skip if already done to save time? 
-        # Or delete and overwrite? Let's overwrite for safety.
         shutil.rmtree(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -54,14 +50,18 @@ def process_session(session_path):
             
         timestamp = timestamps[frame_idx]
         
+        # Flip horizontally to recover true physical view
+        # (raw video is mirrored by upstream process)
+        frame_flipped = cv2.flip(frame, 1)
+        
         # Save frame: frame_0001_163223.png
         filename = f"frame_{frame_idx:05d}_{timestamp}.png"
-        cv2.imwrite(str(output_dir / filename), frame)
+        cv2.imwrite(str(output_dir / filename), frame_flipped)
         
         frame_idx += 1
 
     cap.release()
-    print(f"[DONE] {session_id}: Extracted {frame_idx} frames.")
+    print(f"[DONE] {session_id}: Extracted {frame_idx} frames (flipped to physical view).")
 
 def main():
     # Ensure raw directory exists

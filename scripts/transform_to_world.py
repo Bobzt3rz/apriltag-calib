@@ -35,6 +35,7 @@ def transform_camera_to_world(points_cam, R_world_to_cam, camera_position_world)
     points_cam_m = points_cam / 1000.0
     
     # Transform: world_point = R_world_to_cam.T @ cam_point + camera_position
+    # R_world_to_cam.T = R_cam_to_world (inverse of orthogonal matrix)
     points_world_m = (R_world_to_cam.T @ points_cam_m.T).T + camera_position_world
     
     return points_world_m.squeeze()
@@ -52,7 +53,8 @@ def compute_look_at_point(R_world_to_cam, camera_position_world, distance=1.0):
         B: [x,y,z] point in world that camera is looking at
     """
     # Camera's +Z axis in world frame (where camera is looking)
-    cam_z_in_world = R_world_to_cam.T @ np.array([0, 0, 1])
+    # This is the third column of R_world_to_cam (which equals R_cam_to_world's third row)
+    cam_z_in_world = R_world_to_cam[:, 2]
     
     # Point B is camera position + distance along look direction
     B = camera_position_world + distance * cam_z_in_world
@@ -121,19 +123,6 @@ def main(cfg: DictConfig):
     
     for frame_name, joint_pos_cam in joint_data_cam.items():
         joint_pos_cam = np.array(joint_pos_cam)  # in mm
-
-        # CORRECTION: Un-flip X coordinate since joint data was computed on flipped images
-        # but calibration was done on un-flipped images
-        # joint_pos_cam[2] = -joint_pos_cam[2]
-        # joint_pos_cam[1] = -joint_pos_cam[1]
-
-        # Apply camera frame transformation: (Y, Z, X) with signs (+, -, -)
-        # This reorders and flips axes before world transformation
-        # transformed_cam = np.array([
-        #     +joint_pos_cam[1],  # new X = +old Y
-        #     +joint_pos_cam[0],  # new Y = -old Z
-        #     +joint_pos_cam[2]   # new Z = -old X
-        # ])                                                                                        
       
         joint_pos_world = transform_camera_to_world(
             joint_pos_cam, 

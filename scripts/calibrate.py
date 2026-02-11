@@ -171,11 +171,9 @@ def main(cfg: DictConfig):
         img = cv2.imread(str(img_path))
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        # The stored frames are horizontally mirrored upstream.
-        # Flip to recover the true physical view before detection.
-        img_physical = cv2.flip(gray, 1)
-
-        detections = at_detector.detect(img_physical)
+        # Frames are already flipped to physical view in preprocessing
+        # No flip needed here
+        detections = at_detector.detect(gray)
         detected_ids = [d.tag_id for d in detections]
 
         # Check if frame contains all required tags
@@ -229,7 +227,7 @@ def main(cfg: DictConfig):
 
         print(f"  Camera Position (x,y,z): [{camera_position_world[0]:.4f}, "
               f"{camera_position_world[1]:.4f}, {camera_position_world[2]:.4f}]")
-        print(f"  Camera look direction (cam -Z in world): {-R_world_to_cam[2, :]}")
+        print(f"  Camera look direction (cam +Z in world): {R_world_to_cam.T @ np.array([0,0,1])}")
         print(f"  Reprojection error: mean={reproj_err.mean():.2f}px, max={reproj_err.max():.2f}px")
 
         # 8. Save result
