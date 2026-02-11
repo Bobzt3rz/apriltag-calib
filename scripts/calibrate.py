@@ -33,20 +33,22 @@ def get_tag_pose_in_world(tag_cfg):
 
     World frame: +X = right, +Y = forward (into room from door), +Z = up.
     """
-    size_m = tag_cfg.size_mm / 1000.0
-    half_s = size_m / 2.0
+    width_m = tag_cfg.width_m
+    height_m = tag_cfg.height_m
+
+    half_w = width_m / 2.0
+    half_h = height_m / 2.0
     corner_pos_world = np.array(tag_cfg.position_xyz)
 
     # Offset from measured corner to tag center in tag-local frame
-    # Tag frame: +X = right, +Y = down, origin at center
     if tag_cfg.measured_corner == "top_left":
-        local_offset = np.array([half_s, half_s, 0])
+        local_offset = np.array([half_w, half_h, 0])
     elif tag_cfg.measured_corner == "top_right":
-        local_offset = np.array([-half_s, half_s, 0])
+        local_offset = np.array([-half_w, half_h, 0])
     elif tag_cfg.measured_corner == "bottom_right":
-        local_offset = np.array([-half_s, -half_s, 0])
+        local_offset = np.array([-half_w, -half_h, 0])
     elif tag_cfg.measured_corner == "bottom_left":
-        local_offset = np.array([half_s, -half_s, 0])
+        local_offset = np.array([half_w, -half_h, 0])
     else:
         raise ValueError(f"Invalid corner: {tag_cfg.measured_corner}")
 
@@ -91,7 +93,7 @@ def get_tag_pose_in_world(tag_cfg):
         raise ValueError(f"Unknown facing: {facing}")
 
     center_pos_world = corner_pos_world + (r_matrix @ local_offset)
-    return center_pos_world, r_matrix
+    return center_pos_world, r_matrix, width_m, height_m
 
 
 def load_intrinsics(filepath):
@@ -108,24 +110,18 @@ def load_intrinsics(filepath):
     return K, D
 
 
-def get_world_corners(center, rotation, size_m):
+def get_world_corners(center, rotation, width_m, height_m):
     """
     Returns 4 world-frame corners in pupil_apriltags detection order.
-
-    The library's homography maps from ideal tag corners at:
-        (-1,+1), (+1,+1), (+1,-1), (-1,-1)
-    In tag-local coords (X=right, Y=down):
-        corner 0: (-half, +half, 0) = bottom-left
-        corner 1: (+half, +half, 0) = bottom-right
-        corner 2: (+half, -half, 0) = top-right
-        corner 3: (-half, -half, 0) = top-left
     """
-    s = size_m / 2.0
+    half_w = width_m / 2.0
+    half_h = height_m / 2.0
+    
     local_corners = np.array([
-        [-s,  s, 0],
-        [ s,  s, 0],
-        [ s, -s, 0],
-        [-s, -s, 0]
+        [-half_w,  half_h, 0],  # bottom-left
+        [ half_w,  half_h, 0],  # bottom-right
+        [ half_w, -half_h, 0],  # top-right
+        [-half_w, -half_h, 0]   # top-left
     ])
     return center + (rotation @ local_corners.T).T
 
@@ -137,11 +133,12 @@ def main(cfg: DictConfig):
     # 1. Load World Map (Scene)
     world_tags = {}
     for tag in cfg.scene.tags:
-        center, rotation = get_tag_pose_in_world(tag)
+        center, rotation, width_m, height_m = get_tag_pose_in_world(tag)
         world_tags[tag.id] = {
             "center_3d": center,
             "rotation": rotation,
-            "size_m": tag.size_mm / 1000.0
+            "width_m": width_m,
+            "height_m": height_m
         }
         print(f"Tag {tag.id} ({tag.wall_facing}): center={center}, normal={-rotation[:, 2]}")
 
@@ -199,7 +196,8 @@ def main(cfg: DictConfig):
             world_corners = get_world_corners(
                 world_tags[d.tag_id]["center_3d"],
                 world_tags[d.tag_id]["rotation"],
-                world_tags[d.tag_id]["size_m"]
+                world_tags[d.tag_id]["width_m"],
+                world_tags[d.tag_id]["height_m"]
             )
 
             obj_points.extend(world_corners)
@@ -238,8 +236,10 @@ def main(cfg: DictConfig):
         rot = R.from_matrix(R_world_to_cam)
         euler_angles = rot.as_euler('xyz', degrees=True)
 
-        calib_output = {
-            "session_id": cfg.session_id,
+        extrinsics_output = {
+            "camera_id": cfg.camera.id,
+            "scene_name": cfg.scene.name,
+            "calibration_session_id": cfg.session_id,
             "frame": img_path.name,
             "camera_position_world": camera_position_world.tolist(),
             "camera_rotation_world_to_cam": R_world_to_cam.tolist(),
@@ -250,11 +250,11 @@ def main(cfg: DictConfig):
             "reprojection_error_max_px": float(reproj_err.max()),
         }
 
-        output_path = root_dir / "outputs" / f"calibration_{cfg.session_id}.json"
+        output_path = root_dir / "outputs" / f"extrinsics_{cfg.camera.id}.json"
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         with open(output_path, 'w') as f:
-            json.dump(calib_output, f, indent=2)
+            json.dump(extrinsics_output, f, indent=2)
 
         print(f"  Saved to: {output_path}")
         break

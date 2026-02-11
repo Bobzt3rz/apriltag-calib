@@ -3,13 +3,15 @@ tag_family: 'tag36h11'
 
 tags:
   - id: 0
-    size_mm: 435
+    width_m: 0.436
+    height_m: 0.432
     wall_facing: "neg_x"
     measured_corner: "bottom_left"
     position_xyz: [7.46, 7.1, 1.0]
 
   - id: 1
-    size_mm: 435
+    width_m: 0.436
+    height_m: 0.435
     wall_facing: "pos_y"
     measured_corner: "bottom_right"
     position_xyz: [6.2032, 5.09, 1.0]
