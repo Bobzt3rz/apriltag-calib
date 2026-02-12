@@ -11,15 +11,10 @@ extrinsics_file: "outputs/extrinsics_${camera.id}.json"
 #extrinsics_file: "outputs/extrinsics_${camera.id}_tag0.json"
 #extrinsics_file: "outputs/extrinsics_${camera.id}_tag1.json"
 joint_data_file: "data/raw/${session_id}/3d_joint_data.json"
-#joint_data_file: "data/raw/${session_id}/3d_joint_data_flipped.json"
 
 # Outputs
 joint_data_world_file: "outputs/3d_joint_data_world_${session_id}.json"
-#joint_data_world_file: "outputs/3d_joint_data_world_${session_id}_ab.json"
 #joint_data_world_file: "outputs/har1_traj_old.json"
-
-# Vizualization
-show_plot: true
 
 # Hydra settings
 hydra:
