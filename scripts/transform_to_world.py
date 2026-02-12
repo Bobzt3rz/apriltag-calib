@@ -34,8 +34,6 @@ def transform_camera_to_world(points_cam, R_world_to_cam, camera_position_world)
     # Convert camera frame points from mm to meters
     points_cam_m = points_cam / 1000.0
     
-    # Transform: world_point = R_world_to_cam.T @ cam_point + camera_position
-    # R_world_to_cam.T = R_cam_to_world (inverse of orthogonal matrix)
     points_world_m = (R_world_to_cam.T @ points_cam_m.T).T + camera_position_world
     
     return points_world_m.squeeze()
@@ -52,30 +50,12 @@ def compute_look_at_point(R_world_to_cam, camera_position_world, distance=1.0):
     Returns:
         B: [x,y,z] point in world that camera is looking at
     """
-    # Camera's +Z axis in world frame (where camera is looking)
-    # This is the third column of R_world_to_cam (which equals R_cam_to_world's third row)
-    cam_z_in_world = R_world_to_cam[:, 2]
+    cam_z_in_world = R_world_to_cam[2, :]
     
     # Point B is camera position + distance along look direction
     B = camera_position_world + distance * cam_z_in_world
     
     return B
-
-def apply_coordinate_correction(positions):
-    """
-    Apply coordinate system transformation to match old reference frame.
-    Transformation: (Y, X, Z) with signs (-, +, -)
-    
-    Args:
-        positions: Nx3 array in new coordinate system
-    Returns:
-        Nx3 array in old coordinate system
-    """
-    corrected = np.zeros_like(positions)
-    corrected[:, 0] = -positions[:, 1]  # new_X = -old_Y
-    corrected[:, 1] = +positions[:, 0]  # new_Y = +old_X
-    corrected[:, 2] = -positions[:, 2]  # new_Z = -old_Z
-    return corrected
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def main(cfg: DictConfig):
@@ -123,6 +103,9 @@ def main(cfg: DictConfig):
     
     for frame_name, joint_pos_cam in joint_data_cam.items():
         joint_pos_cam = np.array(joint_pos_cam)  # in mm
+
+        # note we do this x negation since joint data was calculated on flipped images
+        joint_pos_cam[0] = -joint_pos_cam[0]
       
         joint_pos_world = transform_camera_to_world(
             joint_pos_cam, 
@@ -142,7 +125,7 @@ def main(cfg: DictConfig):
     print(f"Transformed joint data saved to: {output_path}")
     print(f"Output units: meters\n")
     
-    # 5. Print sample for verification
+    # 5. Print sample for verification  
     sample_frame = list(joint_data_world.keys())[0]
     sample_cam = np.array(joint_data_cam[sample_frame])
     print(f"Sample transformation ({sample_frame}):")

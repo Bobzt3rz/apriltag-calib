@@ -66,8 +66,8 @@ def main(cfg: DictConfig):
     plt.legend(fontsize=12)
     
     # Set fixed bounds
-    plt.xlim(-2, 8)
-    plt.ylim(-2, 8)
+    plt.xlim(-2, 8.0)
+    plt.ylim(-2, 8.0)
     plt.gca().set_aspect('equal')
     
     # Add colorbar

@@ -125,9 +125,7 @@ def main(cfg: DictConfig):
         R_world_to_cam, camera_pos = load_extrinsics(extrinsics_path)
         camera_loaded = True
         
-        # Camera look direction: +Z in camera frame transformed to world
-        # This is the third column of R_world_to_cam (not R.T @ [0,0,1]!)
-        cam_look_dir = R_world_to_cam[:, 2]
+        cam_look_dir = R_world_to_cam[2, :]
         
         print(f"Calibrated Camera (red):")
         print(f"  Position: [{camera_pos[0]:.3f}, {camera_pos[1]:.3f}, {camera_pos[2]:.3f}]")

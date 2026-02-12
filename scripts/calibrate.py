@@ -218,7 +218,7 @@ def main(cfg: DictConfig):
 
         R_cam, _ = cv2.Rodrigues(rvec)
         camera_position_world = (-R_cam.T @ tvec).flatten()
-        R_world_to_cam = R_cam.T
+        R_world_to_cam = R_cam
 
         # Reprojection error
         reproj, _ = cv2.projectPoints(obj_points, rvec, tvec, K, D)
