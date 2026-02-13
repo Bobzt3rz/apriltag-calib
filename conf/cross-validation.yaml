@@ -1,0 +1,9 @@
+defaults:
+  - _self_
+  - camera: har_01
+  - scene: bedroom
+
+session_id: "2026_02_09_17_03_39_SB-40808C-2"
+tag0_extrinsics_file: "outputs/extrinsics_${camera.id}_tag0.json"
+tag1_extrinsics_file: "outputs/extrinsics_${camera.id}_tag1.json"
+joint_extrinsics_file: "outputs/extrinsics_${camera.id}.json"

@@ -7,12 +7,12 @@ defaults:
 session_id: "2026_02_09_17_03_39_SB-40808C-2"
 
 # Inputs
-extrinsics_file: "outputs/extrinsics_${camera.id}.json"
-#extrinsics_file: "outputs/extrinsics_${camera.id}_tag0.json"
-#extrinsics_file: "outputs/extrinsics_${camera.id}_tag1.json"
 joint_data_file: "data/raw/${session_id}/3d_joint_data.json"
 
 # Outputs
+extrinsics_file: "outputs/extrinsics_${camera.id}.json"
+#extrinsics_file: "outputs/extrinsics_${camera.id}_tag0.json"
+#extrinsics_file: "outputs/extrinsics_${camera.id}_tag1.json"
 joint_data_world_file: "outputs/3d_joint_data_world_${session_id}.json"
 #joint_data_world_file: "outputs/har1_traj_old.json"
 
